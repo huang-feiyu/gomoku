@@ -37,7 +37,7 @@ func NewManager() *Manager {
 func (m *Manager) setupEventHandlers() {
 	m.handlers[EventSendMessage] = func(e Event, c *Client) error {
 		log.Printf("client[%d] ReadMessage(%s) => %s\n",
-			c.id, EventSendMessage, e.Payload)
+			c.id, EventSendMessage, e)
 		return nil
 	}
 }
