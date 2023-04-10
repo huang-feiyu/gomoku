@@ -12,10 +12,25 @@ var (
 
 	// websocketUpgrader: incoming HTTP requests -> persitent WebSocket connection
 	websocketUpgrader = websocket.Upgrader{
+		CheckOrigin:     checkOrigin,
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
 )
+
+// checkOrigin will check origin and return true if its allowed
+func checkOrigin(r *http.Request) bool {
+
+	// Grab the request origin
+	origin := r.Header.Get("Origin")
+
+	switch origin {
+	case "http://" + addr + port:
+		return true
+	default:
+		return false
+	}
+}
 
 // setupAPI will start all Routes and their Handlers
 func setupAPI() {
