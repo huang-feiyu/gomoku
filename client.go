@@ -23,6 +23,8 @@ type Client struct {
 	id      int      // identification from manager
 
 	egress chan Event // avoid concurrent writes by blocking a non-buffer channel
+
+	chatroom string // group field
 }
 
 // NewClient is used to initialize a new Client with all required values initialized

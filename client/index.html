@@ -81,6 +81,14 @@
             }
         }
         /**
+         * ChangeChatRoomEvent is used to switch chatroom
+         * */
+        class ChangeChatRoomEvent {
+            constructor(name) {
+                this.name = name;
+            }
+        }
+        /**
          * routeEvent is a proxy function that routes
          * events into their correct Handler
          * based on the type field
@@ -118,8 +126,14 @@
         function changeChatRoom() {
             // Change Header to reflect the Changed chatroom
             var newchat = document.getElementById("chatroom");
-            if (newchat != null && newchat.value !== selectedchat) {
-                console.log(newchat);
+            if (newchat != null && newchat.value != selectedchat) {
+                selectedchat = newchat.value;
+                header = document.getElementById("chat-header").innerHTML = "Currently in chat: " + selectedchat;
+
+                let changeEvent = new ChangeChatRoomEvent(selectedchat);
+                sendEvent("change_room", changeEvent);
+                textarea = document.getElementById("chatmessages");
+                textarea.innerHTML = `You changed room into: ${selectedchat}`;
             }
             return false;
         }
