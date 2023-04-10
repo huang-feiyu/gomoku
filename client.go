@@ -40,6 +40,7 @@ func (c *Client) readMessages() {
 		// graceful close the Conn once this process is done
 		c.manager.removeClient(c)
 	}()
+	c.connection.SetReadLimit(512)
 
 	// Configure Wait time for Pong response, use Current time + pongWait
 	// This has to be done here to set the first initial timer.
@@ -71,11 +72,6 @@ func (c *Client) readMessages() {
 		// Route the Event
 		if err = c.manager.routeEvent(request, c); err != nil {
 			log.Println("Error handling Message: ", err)
-		}
-
-		// NOTE: Hack to test that WriteMessages works as intended
-		for wsClient := range c.manager.clients {
-			wsClient.egress <- request
 		}
 	}
 }
