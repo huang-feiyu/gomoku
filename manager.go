@@ -16,7 +16,7 @@ type Manager struct {
 	sync.RWMutex
 }
 
-// NewManager initalizes all the values inside the manager
+// NewManager initializes all the values inside the manager
 func NewManager() *Manager {
 	return &Manager{
 		id:      1,
@@ -37,8 +37,11 @@ func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
 	client := NewClient(conn, m)
 	m.addClient(client)
 
-	log.Printf("New connection: client[%d]\n", client.id)
+	// start two go routines
+	go client.readMessages()
+	go client.writeMessages()
 
+	log.Printf("client[%d] New connection: starts to read/write\n", client.id)
 }
 
 // addClient will add clients to our clientList
@@ -61,6 +64,6 @@ func (m *Manager) removeClient(client *Client) {
 		_ = client.connection.Close()
 		delete(m.clients, client)
 
-		log.Println("Close connection: client[", client.id, "]")
+		log.Printf("client[%d] Close connection\n", client.id)
 	}
 }
