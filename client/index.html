@@ -62,6 +62,25 @@
             }
         }
         /**
+         * SendMessageEvent is used to send messages to other clients
+         * */
+        class SendMessageEvent {
+            constructor(message, from) {
+                this.message = message;
+                this.from = from;
+            }
+        }
+        /**
+         * NewMessageEvent is messages coming from clients
+         * */
+        class NewMessageEvent {
+            constructor(message, from, sent) {
+                this.message = message;
+                this.from = from;
+                this.sent = sent;
+            }
+        }
+        /**
          * routeEvent is a proxy function that routes
          * events into their correct Handler
          * based on the type field
@@ -72,14 +91,26 @@
             }
             switch (event.type) {
                 case "new_message":
-                    console.log("new message");
+                    const messageEvent = Object.assign(new NewMessageEvent, event.payload);
+                    appendChatMessage(messageEvent);
                     break;
                 default:
                     alert("unsupported message type");
                     break;
             }
         }
-
+        /**
+         * appendChatMessage takes in new messages and adds them to the chat
+         * */
+        function appendChatMessage(messageEvent) {
+            var date = new Date(messageEvent.sent);
+            // format message
+            const formattedMsg = `${date.toLocaleString()}: ${messageEvent.message}`;
+            // Append Message
+            textarea = document.getElementById("chatmessages");
+            textarea.innerHTML = textarea.innerHTML + "\n" + formattedMsg;
+            textarea.scrollTop = textarea.scrollHeight;
+        }
         /**
          * changeChatRoom will update the value of selectedchat
          * and also notify the server that it changes chatroom
@@ -98,7 +129,8 @@
         function sendMessage() {
             var newmessage = document.getElementById("message");
             if (newmessage != null) {
-                sendEvent("send_message", newmessage.value)
+                let outgoingEvent = new SendMessageEvent(newmessage.value, "percy");
+                sendEvent("send_message", outgoingEvent)
             }
             return false;
         }

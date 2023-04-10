@@ -21,7 +21,7 @@ var (
 // checkOrigin will check origin and return true if its allowed
 func checkOrigin(r *http.Request) bool {
 
-	// Grab the request origin
+	// grab the request origin
 	origin := r.Header.Get("Origin")
 
 	switch origin {

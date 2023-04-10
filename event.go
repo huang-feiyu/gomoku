@@ -1,6 +1,10 @@
 package main
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
 
 // Event is the Messages sent over the WebSocket
 // Used to differ between different actions
@@ -13,12 +17,49 @@ type Event struct {
 type EventHandler func(event Event, c *Client) error
 
 const (
-	// EventSendMessage is the event type for new chat messages sent
 	EventSendMessage = "send_message"
+	EventNewMessage  = "new_message"
 )
 
 // SendMessageEvent is the payload sent in the send_message event
 type SendMessageEvent struct {
 	Message string `json:"message"`
 	From    string `json:"from"`
+}
+
+// NewMessageEvent is returned when responding to send_message
+type NewMessageEvent struct {
+	SendMessageEvent
+	Sent time.Time `json:"sent"`
+}
+
+// SendMessageHandler will send out a message to all other participants in the chat
+func SendMessageHandler(event Event, c *Client) error {
+	// Marshal Payload into wanted format
+	var chatevent SendMessageEvent
+	if err := json.Unmarshal(event.Payload, &chatevent); err != nil {
+		return fmt.Errorf("bad payload in request: %v", err)
+	}
+
+	// Prepare an Outgoing Message to others
+	var broadMessage NewMessageEvent
+
+	broadMessage.Sent = time.Now()
+	broadMessage.Message = chatevent.Message
+	broadMessage.From = chatevent.From
+
+	data, err := json.Marshal(broadMessage)
+	if err != nil {
+		return fmt.Errorf("failed to marshal broadcast message: %v", err)
+	}
+
+	// Place payload into an Event
+	var outgoingEvent Event
+	outgoingEvent.Payload = data
+	outgoingEvent.Type = EventNewMessage
+	// Broadcast to all other Clients
+	for client := range c.manager.clients {
+		client.egress <- outgoingEvent
+	}
+	return nil
 }

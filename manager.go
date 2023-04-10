@@ -35,11 +35,7 @@ func NewManager() *Manager {
 
 // setupEventHandlers configures and adds all handlers
 func (m *Manager) setupEventHandlers() {
-	m.handlers[EventSendMessage] = func(e Event, c *Client) error {
-		log.Printf("client[%d] ReadMessage(%s) => %s\n",
-			c.id, EventSendMessage, e)
-		return nil
-	}
+	m.handlers[EventSendMessage] = SendMessageHandler
 }
 
 // routeEvent makes sure the correct event goes into the correct handler
