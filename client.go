@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"log"
 )
@@ -15,7 +16,7 @@ type Client struct {
 	manager *Manager // reference to its manager/supervisor
 	id      int      // identification from manager
 
-	egress chan []byte // avoid concurrent writes by blocking a non-buffer channel
+	egress chan Event // avoid concurrent writes by blocking a non-buffer channel
 }
 
 // NewClient is used to initialize a new Client with all required values initialized
@@ -23,7 +24,7 @@ func NewClient(conn *websocket.Conn, manager *Manager) *Client {
 	return &Client{
 		connection: conn,
 		manager:    manager,
-		egress:     make(chan []byte),
+		egress:     make(chan Event),
 	}
 }
 
@@ -37,7 +38,7 @@ func (c *Client) readMessages() {
 	// loop forever => always runs as a go routine
 	for {
 		// ReadMessage is used to read the next message in queue of the Conn
-		messageType, payload, err := c.connection.ReadMessage()
+		_, payload, err := c.connection.ReadMessage()
 
 		// if error occurs, kill the Conn
 		if err != nil {
@@ -46,13 +47,16 @@ func (c *Client) readMessages() {
 			}
 			break
 		}
-		log.Printf("client[%d] ReadMessage => "+"MessageType: %d\t"+"Payload: %s\n",
-			c.id, messageType, string(payload))
 
-		// Hack to test that WriteMessages works as intended
-		// FIX: Will be replaced soon
-		for wsClient := range c.manager.clients {
-			wsClient.egress <- payload
+		// Marshal incoming data into a Event struct
+		var request Event
+		if err = json.Unmarshal(payload, &request); err != nil {
+			log.Printf("error marshalling message: %v", err)
+			break // Breaking the connection here might be harsh xD
+		}
+		// Route the Event
+		if err = c.manager.routeEvent(request, c); err != nil {
+			log.Println("Error handling Message: ", err)
 		}
 	}
 }
@@ -72,15 +76,20 @@ func (c *Client) writeMessages() {
 			if !ok {
 				// inform client of the close
 				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					log.Println("connection closed: ", err)
+					log.Printf("client[%d]", c.id)
+					log.Println("WriteMessage: already closed connection => ", err)
 				}
-				// kill the go routine
-				return
+				return // kill the go routine
 			}
-
+			data, err := json.Marshal(message)
+			if err != nil {
+				log.Println(err)
+				return // kill the go routine
+			}
 			// write a regular text message to the connection
-			if err := c.connection.WriteMessage(websocket.TextMessage, message); err != nil {
-				log.Printf("client[%d] WriteMessage: fail =>\n", err)
+			if err = c.connection.WriteMessage(websocket.TextMessage, data); err != nil {
+				log.Printf("client[%d]", c.id)
+				log.Println("WriteMessage: fail => ", err)
 			} else {
 				log.Printf("client[%d] WriteMessage: success\n", c.id)
 			}
