@@ -106,8 +106,7 @@ func (c *Client) writeMessages() {
 			if !ok {
 				// inform client of the close
 				if err := c.connection.WriteMessage(websocket.CloseMessage, nil); err != nil {
-					log.Printf("client[%d]", c.id)
-					log.Println("WriteMessage: already closed connection => ", err)
+					log.Printf("client[%d] WriteMessage: already closed connection => %v", c.id, err)
 				}
 				return
 			}
@@ -128,8 +127,7 @@ func (c *Client) writeMessages() {
 
 		case <-ticker.C:
 			if err := c.connection.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
-				log.Printf("client[%d]", c.id)
-				log.Println("Ping: fail => ", err)
+				log.Printf("client[%d] Ping: fail => %v", c.id, err)
 				return
 			}
 			log.Printf("client[%d] Ping: sent to client\n", c.id)
