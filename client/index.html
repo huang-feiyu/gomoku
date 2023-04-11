@@ -5,13 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Ludwig Huang - Websockets</title>
+    <title>Ludwig Huang - Gomoku</title>
 </head>
 
 <body>
 <div class="center">
-    <h1>Amazing Chat Application</h1>
-    <h3 id="chat-header">Currently in chat: general</h3>
+    <h1>Gomoku Game</h1>
+    <h3 id="chat-header">Currently in chat: <font color="red">random match</font></h3>
 
     <!--
     Here is a form that allows us to select what Chatroom to be in
@@ -39,12 +39,32 @@
         <input type="submit" value="Send message">
     </form>
 </div>
+<br>
+<br>
+<br>
 
-<!--
-    Javascript that is used to Connect to Websocket and Handle New messages
--->
+<div class="gomoku">
+    <div class="playerInfo">
+        <div class="name1">
+            Player 1:
+            <textarea id="player1" placeholder="Ludwig Huang" readonly rows="1"></textarea>
+        </div>
+        <div class="name2">
+            Player 2:
+            <textarea id="player2" placeholder="Feiyu Huang" readonly rows="1"></textarea>
+        </div>
+        <div style="clear:both"></div>
+
+        <textarea id="result" class="result" placeholder="Nothing here for now!" readonly rows="1"></textarea>
+    </div>
+    <table id="board"></table>
+</div>
+
+<!-- Javascript for chessboard -->
+<script type="text/javascript" src="chessboard.js"></script>
+
+<!-- Javascript to Connect to Websocket and Handle New messages -->
 <script type="text/javascript">
-
         // selectedchat is by default General.
         var selectedchat = "general";
 
@@ -185,10 +205,13 @@
                     // Let router manage message
                     routeEvent(event);
                 }
+
+                initChessboard(10)
             } else {
-                alert("Not supporting websockets");
+                alert("Not supporting WebSocket")
             }
         };
+
     </script>
 
 <style type="text/css">
@@ -207,7 +230,59 @@
             border: 3px solid green;
             padding: 10px;
         }
-    </style>
+
+        .gomoku {
+            margin: auto;
+            width: 50%;
+            border: 3px solid green;
+            padding: 10px;
+        }
+
+        .playerInfo {
+            width: 435px;
+
+        }
+        .name1 {
+            width: 48%;
+            margin: auto;
+            border: 1px solid;
+            float: left;
+        }
+
+        .name2 {
+            width: 49%;
+            margin: auto;
+            border: 1px solid;
+            float: right;
+        }
+
+        .result {
+            width: 100%;
+            margin: 2px;
+            border: 1px solid;
+        }
+
+        .background {
+            height: 40px;
+            width : 40px;
+            cursor: pointer;
+            background-image: url(/background.gif);
+        }
+
+        .whiteStone {
+            height: 40px;
+            width : 40px;
+            cursor: pointer;
+            background-image: url(/whiteStone.gif);
+        }
+
+        .blackStone {
+            height: 40px;
+            width : 40px;
+            cursor: pointer;
+            background-image: url(/blackStone.gif);
+        }
+</style>
 
 </body>
 
