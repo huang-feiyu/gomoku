@@ -10,6 +10,10 @@ import (
 var (
 	pongWait     = 10 * time.Second    // pongWait is how long we will await a pong response from client
 	pingInterval = (pongWait * 9) / 10 // pingInterval has to be less than pongWait, otherwise server will close before next ping
+
+	ROLE_UNMATCH = 0
+	ROLE_PALYER1 = 1
+	ROLE_PALYER2 = 2
 )
 
 // ClientList is a map used to help manage a map of clients
@@ -24,7 +28,8 @@ type Client struct {
 
 	egress chan Event // avoid concurrent writes by blocking a non-buffer channel
 
-	chatroom string // group field
+	room int // group field
+	role int
 }
 
 // NewClient is used to initialize a new Client with all required values initialized
@@ -33,6 +38,7 @@ func NewClient(conn *websocket.Conn, manager *Manager) *Client {
 		connection: conn,
 		manager:    manager,
 		egress:     make(chan Event),
+		role:       ROLE_UNMATCH,
 	}
 }
 
@@ -96,7 +102,6 @@ func (c *Client) writeMessages() {
 	for {
 		select {
 		case message, ok := <-c.egress:
-
 			// has been closed
 			if !ok {
 				// inform client of the close
@@ -118,7 +123,7 @@ func (c *Client) writeMessages() {
 				log.Printf("client[%d]", c.id)
 				log.Println("WriteMessage: fail => ", err)
 			} else {
-				log.Printf("client[%d] WriteMessage: sent to client\n", c.id)
+				log.Printf("client[%d] WriteMessage: sent(%s) to client\n", c.id, message.Type)
 			}
 
 		case <-ticker.C:

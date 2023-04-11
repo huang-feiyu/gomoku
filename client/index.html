@@ -11,16 +11,7 @@
 <body>
 <div class="center">
     <h1>Gomoku Game</h1>
-    <h3 id="chat-header">Currently in chat: <font color="red">random match</font></h3>
-
-    <!--
-    Here is a form that allows us to select what Chatroom to be in
-    -->
-    <form id="chatroom-selection">
-        <label for="chatroom">Chatroom:</label>
-        <input type="text" id="chatroom" name="chatroom"><br><br>
-        <input type="submit" value="Change chatroom">
-    </form>
+    <h3>Currently Role: <font color="red" id="role-header">matching</font></h3>
 
     <br>
     <!--
@@ -38,25 +29,25 @@
         <input type="text" id="message" name="message"><br><br>
         <input type="submit" value="Send message">
     </form>
+    <div class="playerInfo">
+        <div class="name1">
+            Player 1:
+            <textarea id="player1" placeholder="Ludwig Huang" readonly rows="1" cols="15"></textarea>
+        </div>
+        <div class="name2">
+            Player 2:
+            <textarea id="player2" placeholder="Feiyu Huang" readonly rows="1" cols="15"></textarea>
+        </div>
+        <div style="clear:both"></div><br>
+
+        <textarea id="result" class="result" placeholder="Nothing here for now!" readonly rows="1"></textarea>
+    </div>
 </div>
 <br>
 <br>
 <br>
 
 <div class="gomoku">
-    <div class="playerInfo">
-        <div class="name1">
-            Player 1:
-            <textarea id="player1" placeholder="Ludwig Huang" readonly rows="1"></textarea>
-        </div>
-        <div class="name2">
-            Player 2:
-            <textarea id="player2" placeholder="Feiyu Huang" readonly rows="1"></textarea>
-        </div>
-        <div style="clear:both"></div>
-
-        <textarea id="result" class="result" placeholder="Nothing here for now!" readonly rows="1"></textarea>
-    </div>
     <table id="board"></table>
 </div>
 
@@ -67,6 +58,7 @@
 <script type="text/javascript">
         // selectedchat is by default General.
         var selectedchat = "general";
+        var role = 1; // default
 
         /**
          * Event is used to wrap all messages Send and Recieved
@@ -101,11 +93,11 @@
             }
         }
         /**
-         * ChangeChatRoomEvent is used to switch chatroom
+         * ConnectRoleEvent is used to assign role
          * */
-        class ChangeChatRoomEvent {
-            constructor(name) {
-                this.name = name;
+        class ConnectRoleEvent {
+            constructor(role) {
+                this.role = role;
             }
         }
         /**
@@ -122,6 +114,11 @@
                     const messageEvent = Object.assign(new NewMessageEvent, event.payload);
                     appendChatMessage(messageEvent);
                     break;
+                case "role_message":
+                    const roleEvent = Object.assign(new ConnectRoleEvent, event.payload);
+                    role = roleEvent.role
+                    document.getElementById("role-header").innerHTML = "Player"+role;
+                    break
                 default:
                     alert("unsupported message type");
                     break;
@@ -138,24 +135,6 @@
             textarea = document.getElementById("chatmessages");
             textarea.innerHTML = textarea.innerHTML + "\n" + formattedMsg;
             textarea.scrollTop = textarea.scrollHeight;
-        }
-        /**
-         * changeChatRoom will update the value of selectedchat
-         * and also notify the server that it changes chatroom
-         * */
-        function changeChatRoom() {
-            // Change Header to reflect the Changed chatroom
-            var newchat = document.getElementById("chatroom");
-            if (newchat != null && newchat.value != selectedchat) {
-                selectedchat = newchat.value;
-                header = document.getElementById("chat-header").innerHTML = "Currently in chat: " + selectedchat;
-
-                let changeEvent = new ChangeChatRoomEvent(selectedchat);
-                sendEvent("change_room", changeEvent);
-                textarea = document.getElementById("chatmessages");
-                textarea.innerHTML = `You changed room into: ${selectedchat}`;
-            }
-            return false;
         }
         /**
          * sendMessage will send a new message onto the Websocket
@@ -186,7 +165,6 @@
         window.onload = function () {
             // Apply our listener functions to the submit event on both forms
             // we do it this way to avoid redirects
-            document.getElementById("chatroom-selection").onsubmit = changeChatRoom;
             document.getElementById("chatroom-message").onsubmit = sendMessage;
 
             // Check if the browser supports WebSocket
@@ -194,6 +172,8 @@
                 console.log("supports websockets");
                 // Connect to websocket
                 conn = new WebSocket("ws://" + document.location.host + "/ws");
+
+                // Assign the role of this client => player1 or player2
 
                 // Add a listener to the onmessage event
                 conn.onmessage = function(evt) {
@@ -216,6 +196,7 @@
 
 <style type="text/css">
         body {
+            font-size: 20px;
             overflow: hidden;
             padding: 0;
             margin: 0;
@@ -238,21 +219,17 @@
             padding: 10px;
         }
 
-        .playerInfo {
-            width: 435px;
-
+        textarea {
+            font-size: 22px;
         }
+
         .name1 {
-            width: 48%;
-            margin: auto;
-            border: 1px solid;
+            width: 40%;
             float: left;
         }
 
         .name2 {
-            width: 49%;
-            margin: auto;
-            border: 1px solid;
+            width: 50%;
             float: right;
         }
 

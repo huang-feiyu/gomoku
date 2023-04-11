@@ -19,7 +19,7 @@ type EventHandler func(event Event, c *Client) error
 const (
 	EventSendMessage = "send_message"
 	EventNewMessage  = "new_message"
-	EventChangeRoom  = "change_room"
+	EventConnectRole = "role_message" // when connect
 )
 
 // SendMessageEvent is the payload sent in the send_message event
@@ -60,27 +60,27 @@ func SendMessageHandler(event Event, c *Client) error {
 	outgoingEvent.Type = EventNewMessage
 	// Broadcast to all other Clients in the same chat group
 	for client := range c.manager.clients {
-		if client.chatroom == c.chatroom {
+		if client.room == c.room {
 			client.egress <- outgoingEvent
 		}
 	}
 	return nil
 }
 
-type ChangeRoomEvent struct {
-	Name string `json:"name"`
+type ConnectRoleEvent struct {
+	Role int `json:"role"`
 }
 
-// ChatRoomHandler will handle switching of chatrooms between clients
-func ChatRoomHandler(event Event, c *Client) error {
-	// Marshal Payload into wanted format
-	var changeRoomEvent ChangeRoomEvent
-	if err := json.Unmarshal(event.Payload, &changeRoomEvent); err != nil {
-		return fmt.Errorf("bad payload in request: %v", err)
+func SendConnectRole(client *Client, role int) error {
+	playerEvent := ConnectRoleEvent{role}
+	data, err := json.Marshal(playerEvent)
+	if err != nil {
+		return err
 	}
-
-	// add client to chat room
-	c.chatroom = changeRoomEvent.Name
+	var outgoingEvent Event
+	outgoingEvent.Payload = data
+	outgoingEvent.Type = EventConnectRole
+	client.egress <- outgoingEvent
 
 	return nil
 }

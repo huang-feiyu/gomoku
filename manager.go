@@ -17,6 +17,8 @@ type Manager struct {
 
 	id int // identification for client
 
+	room int // identification for room
+
 	sync.RWMutex
 
 	handlers map[string]EventHandler // handlers: map[event_type] -> handler
@@ -26,6 +28,7 @@ type Manager struct {
 func NewManager() *Manager {
 	m := &Manager{
 		id:       1,
+		room:     1,
 		clients:  make(ClientList),
 		handlers: map[string]EventHandler{},
 	}
@@ -36,7 +39,6 @@ func NewManager() *Manager {
 // setupEventHandlers configures and adds all handlers
 func (m *Manager) setupEventHandlers() {
 	m.handlers[EventSendMessage] = SendMessageHandler
-	m.handlers[EventChangeRoom] = ChatRoomHandler
 }
 
 // routeEvent makes sure the correct event goes into the correct handler
@@ -69,17 +71,20 @@ func (m *Manager) serveWS(w http.ResponseWriter, r *http.Request) {
 	go client.writeMessages()
 
 	log.Printf("client[%d] New connection: starts to read/write\n", client.id)
+
+	// match if possible
+	m.matchClient(client)
 }
 
 // addClient will add clients to our clientList
-func (m *Manager) addClient(client *Client) {
+func (m *Manager) addClient(c *Client) {
 	m.Lock()
 	defer m.Unlock()
 
-	client.id = m.id
+	c.id = m.id
 	m.id++
 
-	m.clients[client] = true
+	m.clients[c] = true
 }
 
 // removeClient will remove the client and clean up
@@ -92,5 +97,29 @@ func (m *Manager) removeClient(client *Client) {
 		delete(m.clients, client)
 
 		log.Printf("client[%d] Close connection\n", client.id)
+	}
+}
+
+// matchClient will match if possible
+func (m *Manager) matchClient(c *Client) {
+	m.Lock()
+	defer m.Unlock()
+
+	// match if possible
+	for client := range m.clients {
+		if client.role == ROLE_UNMATCH && c != client {
+			client.room = m.room
+			c.room = m.room
+			m.room++
+
+			_ = SendConnectRole(client, ROLE_PALYER1)
+			client.role = ROLE_PALYER1
+
+			_ = SendConnectRole(c, ROLE_PALYER2)
+			c.role = ROLE_PALYER2
+
+			log.Printf("client[%d] Match client[%d] at room[%d]\n", client.id, c.id, m.room-1)
+			break
+		}
 	}
 }
