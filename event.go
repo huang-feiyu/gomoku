@@ -20,6 +20,7 @@ const (
 	EventSendMessage = "send_message"
 	EventNewMessage  = "new_message"
 	EventConnectRole = "role_message" // when connect
+	EventChangeName  = "name_message" // when connect
 )
 
 // SendMessageEvent is the payload sent in the send_message event
@@ -71,16 +72,43 @@ type ConnectRoleEvent struct {
 	Role int `json:"role"`
 }
 
+// SendConnectRole is called when a client emerges
+// AND this client match with the waiting client => send role message to client
 func SendConnectRole(client *Client, role int) error {
 	playerEvent := ConnectRoleEvent{role}
-	data, err := json.Marshal(playerEvent)
-	if err != nil {
-		return err
-	}
+	data, _ := json.Marshal(playerEvent)
 	var outgoingEvent Event
 	outgoingEvent.Payload = data
 	outgoingEvent.Type = EventConnectRole
 	client.egress <- outgoingEvent
 
+	return nil
+}
+
+type ChangeNameEvent struct {
+	Name string `json:"name"`
+	Role int    `json:"role"`
+}
+
+// ChangeNameHandler not only changes the current client name, => receive name from client
+// but also updates the pair's display => send name message to the pair
+func ChangeNameHandler(event Event, c *Client) error {
+	// receive name from client
+	var changeNameEvent ChangeNameEvent
+	if err := json.Unmarshal(event.Payload, &changeNameEvent); err != nil {
+		return fmt.Errorf("bad payload in request: %v", err)
+	}
+
+	// send name to opponent as well as THIS client
+	opponent := c.GetPartner()
+	if opponent == nil {
+		return fmt.Errorf("change name is not allowed if no partner")
+	}
+	data, _ := json.Marshal(changeNameEvent)
+	var outgoingEvent Event
+	outgoingEvent.Payload = data
+	outgoingEvent.Type = EventChangeName
+	opponent.egress <- outgoingEvent
+	c.egress <- outgoingEvent
 	return nil
 }

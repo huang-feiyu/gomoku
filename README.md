@@ -16,7 +16,7 @@ In general, gomoku needs:
     * [x] gomoku chessboard
 * APIs to communicate messages
     * [x] role message -> C
-    * [ ] name message -> S
+    * [x] name message -> S & C
     * [ ] move message -> S
     * [ ] result message -> C
 

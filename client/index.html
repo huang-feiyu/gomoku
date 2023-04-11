@@ -29,6 +29,13 @@
         <input type="text" id="message" name="message"><br><br>
         <input type="submit" value="Send message">
     </form>
+
+    <form id="name-message">
+        <label for="name-message">Name:</label>
+        <input type="text" id="name" name="name">
+        <input type="submit" value="Change Name">
+    </form>
+
     <div class="playerInfo">
         <div class="name1">
             Player 1:
@@ -56,9 +63,10 @@
 
 <!-- Javascript to Connect to Websocket and Handle New messages -->
 <script type="text/javascript">
-        // selectedchat is by default General.
-        var selectedchat = "general";
-        var role = 1; // default
+        var role = 0; // default
+        var matched = false;
+        var player1;
+        var player2;
 
         /**
          * Event is used to wrap all messages Send and Recieved
@@ -80,6 +88,15 @@
             constructor(message, from) {
                 this.message = message;
                 this.from = from;
+            }
+        }
+        /**
+         * ChangeNameEvent is used to change name
+         * */
+        class ChangeNameEvent {
+            constructor(name, role) {
+                this.name = name
+                this.role = role
             }
         }
         /**
@@ -116,13 +133,40 @@
                     break;
                 case "role_message":
                     const roleEvent = Object.assign(new ConnectRoleEvent, event.payload);
-                    role = roleEvent.role
-                    document.getElementById("role-header").innerHTML = "Player"+role;
+                    changeRole(roleEvent)
+                    break
+                case "name_message":
+                    const nameEvent = Object.assign(new ChangeNameEvent, event.payload);
+                    changeName(nameEvent)
                     break
                 default:
                     alert("unsupported message type");
                     break;
             }
+        }
+        /**
+         * changeRole indicates default name as well as something else
+         * */
+        function changeRole(roleEvent) {
+            role = roleEvent.role
+            document.getElementById("role-header").innerHTML = "Player" + role;
+            matched = true;
+
+            // default name
+            player1 = "Ludwig Huang"
+            player2 = "Feiyu Huang"
+        }
+        /**
+         * changeName updates the name of a specific role
+         * */
+        function changeName(nameEvent) {
+            if (nameEvent.role === 1) {
+                player1 = nameEvent.name
+            } else if (nameEvent.role === 2) {
+                player2 = nameEvent.name
+            }
+            document.getElementById("player1").innerText = player1
+            document.getElementById("player2").innerText = player2
         }
         /**
          * appendChatMessage takes in new messages and adds them to the chat
@@ -147,7 +191,21 @@
             }
             return false;
         }
-
+        /**
+         * sendName will send name through WebSocket
+         * */
+        function sendName() {
+            let newName = document.getElementById("name");
+            if (!matched) {
+                alert("please wait until matched")
+                return false
+            }
+            if (newName != null) {
+                let outgoingEvent = new ChangeNameEvent(newName.value, role);
+                sendEvent("name_message", outgoingEvent)
+            }
+            return false;
+        }
         /**
          * sendEvent
          * eventname - the event name to send on
@@ -166,6 +224,7 @@
             // Apply our listener functions to the submit event on both forms
             // we do it this way to avoid redirects
             document.getElementById("chatroom-message").onsubmit = sendMessage;
+            document.getElementById("name-message").onsubmit = sendName;
 
             // Check if the browser supports WebSocket
             if (window["WebSocket"]) {

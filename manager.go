@@ -39,6 +39,7 @@ func NewManager() *Manager {
 // setupEventHandlers configures and adds all handlers
 func (m *Manager) setupEventHandlers() {
 	m.handlers[EventSendMessage] = SendMessageHandler
+	m.handlers[EventChangeName] = ChangeNameHandler
 }
 
 // routeEvent makes sure the correct event goes into the correct handler
