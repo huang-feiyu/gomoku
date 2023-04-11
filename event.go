@@ -132,7 +132,7 @@ func MoveHandler(event Event, c *Client) error {
 	}
 	res := c.room.Move(moveEvent.Role, moveEvent.Row, moveEvent.Col)
 
-	// send display to both of the pair
+	// TODO: send display to both of the pair
 
 	// send result to the pair
 	if res != 0 {

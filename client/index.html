@@ -151,6 +151,9 @@
                     const nameEvent = Object.assign(new ChangeNameEvent, event.payload);
                     changeName(nameEvent)
                     break
+                case "move_message":
+                    //TODO:
+                    break
                 default:
                     alert("unsupported message type");
                     break;
@@ -253,8 +256,6 @@
                 console.log("supports websockets");
                 // Connect to websocket
                 conn = new WebSocket("ws://" + document.location.host + "/ws");
-
-                // Assign the role of this client => player1 or player2
 
                 // Add a listener to the onmessage event
                 conn.onmessage = function(evt) {

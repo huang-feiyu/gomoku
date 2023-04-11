@@ -19,10 +19,11 @@ function initChessboard(n) {
                     alert("please wait until your turn")
                     return false
                 }
-                if (this.className != null) {
+                if (this.className !== "background") {
                     alert("cannot put on an occupied pile")
                     return false
                 }
+                // FIXME: wrong
                 if (role === 1) {
                     turnWhite(this)
                 } else {
@@ -35,6 +36,7 @@ function initChessboard(n) {
     }
 }
 
+// FIXME: x, y
 function turnWhite(cell) {
     cell.className = "whiteStone";
 }
