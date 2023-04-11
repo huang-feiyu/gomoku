@@ -11,22 +11,26 @@ function initChessboard(n) {
 
             cell.addEventListener("click", function () {
                 // alert("cell ["+ getX(this) + "," + getY(this) + "] clicked");
-                if (cell.className === "blackStone") {
-                    turnWhite(cell);
-                } else if (cell.className === "whiteStone") {
-                    turnBlack(cell);
-                } else {
-                    turnWhite(cell);
+                if (!matched) {
+                    alert("please wait until matched")
+                    return false
                 }
+                if (!inTurn) {
+                    alert("please wait until your turn")
+                    return false
+                }
+                if (this.className != null) {
+                    alert("cannot put on an occupied pile")
+                    return false
+                }
+                if (role === 1) {
+                    turnWhite(this)
+                } else {
+                    turnBlack(this)
+                }
+                sendMove(getX(cell), getY(cell))
+                return false
             });
-
-            // test start
-            if (j % 3 === 0) {
-                turnBlack(cell);
-            } else if (j % 3 === 2) {
-                turnWhite(cell);
-            }
-            // test end
         }
     }
 }

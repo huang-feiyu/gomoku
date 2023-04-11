@@ -28,7 +28,7 @@ type Client struct {
 
 	egress chan Event // avoid concurrent writes by blocking a non-buffer channel
 
-	room int // group field
+	room *Room // group field
 	role int
 }
 
@@ -38,6 +38,7 @@ func NewClient(conn *websocket.Conn, manager *Manager) *Client {
 		connection: conn,
 		manager:    manager,
 		egress:     make(chan Event),
+		room:       &Room{},
 		role:       ROLE_UNMATCH,
 	}
 }

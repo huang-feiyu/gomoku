@@ -63,10 +63,12 @@
 
 <!-- Javascript to Connect to Websocket and Handle New messages -->
 <script type="text/javascript">
-        var role = 0; // default
-        var matched = false;
-        var player1;
-        var player2;
+        let role = 0; // default
+        let matched = false;
+        let inTurn = false;
+
+        let player1;
+        let player2;
 
         /**
          * Event is used to wrap all messages Send and Recieved
@@ -97,6 +99,16 @@
             constructor(name, role) {
                 this.name = name
                 this.role = role
+            }
+        }
+        /**
+         * MoveEvent is used for display
+         * */
+        class MoveEvent {
+            constructor(role, row, col) {
+                this.role = role
+                this.row = row
+                this.row = col
             }
         }
         /**
@@ -155,6 +167,8 @@
             // default name
             player1 = "Ludwig Huang"
             player2 = "Feiyu Huang"
+
+            inTurn = roleEvent.role === 1
         }
         /**
          * changeName updates the name of a specific role
@@ -204,6 +218,14 @@
                 let outgoingEvent = new ChangeNameEvent(newName.value, role);
                 sendEvent("name_message", outgoingEvent)
             }
+            return false;
+        }
+        /**
+         * sendName will send move through WebSocket
+         * */
+        function sendMove(row, col) {
+            let outgoingEvent = new MoveEvent(role, row, col);
+            sendEvent("move_message", outgoingEvent)
             return false;
         }
         /**

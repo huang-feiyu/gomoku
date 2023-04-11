@@ -20,7 +20,8 @@ const (
 	EventSendMessage = "send_message"
 	EventNewMessage  = "new_message"
 	EventConnectRole = "role_message" // when connect
-	EventChangeName  = "name_message" // when connect
+	EventChangeName  = "name_message"
+	EventMove        = "move_message"
 )
 
 // SendMessageEvent is the payload sent in the send_message event
@@ -61,7 +62,7 @@ func SendMessageHandler(event Event, c *Client) error {
 	outgoingEvent.Type = EventNewMessage
 	// Broadcast to all other Clients in the same chat group
 	for client := range c.manager.clients {
-		if client.room == c.room {
+		if client.room.id == c.room.id {
 			client.egress <- outgoingEvent
 		}
 	}
@@ -100,15 +101,41 @@ func ChangeNameHandler(event Event, c *Client) error {
 	}
 
 	// send name to opponent as well as THIS client
-	opponent := c.GetPartner()
-	if opponent == nil {
-		return fmt.Errorf("change name is not allowed if no partner")
-	}
+
 	data, _ := json.Marshal(changeNameEvent)
 	var outgoingEvent Event
 	outgoingEvent.Payload = data
 	outgoingEvent.Type = EventChangeName
+	opponent := c.GetPartner()
+	if opponent == nil {
+		return fmt.Errorf("change name is not allowed if no partner")
+	}
 	opponent.egress <- outgoingEvent
 	c.egress <- outgoingEvent
+	return nil
+}
+
+type MoveEvent struct {
+	Role int `json:"role"`
+	Row  int `json:"row"`
+	Col  int `json:"col"`
+}
+
+// MoveHandler not only receive the move, => receive move from client
+// but also updates the pair's display => send move message to the pair
+// TODO: result
+func MoveHandler(event Event, c *Client) error {
+	// receive move from client
+	var moveEvent MoveEvent
+	if err := json.Unmarshal(event.Payload, &moveEvent); err != nil {
+		return fmt.Errorf("bad payload in request: %v", err)
+	}
+	res := c.room.Move(moveEvent.Role, moveEvent.Row, moveEvent.Col)
+
+	// send display to both of the pair
+
+	// send result to the pair
+	if res != 0 {
+	}
 	return nil
 }

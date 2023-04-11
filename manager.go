@@ -40,6 +40,7 @@ func NewManager() *Manager {
 func (m *Manager) setupEventHandlers() {
 	m.handlers[EventSendMessage] = SendMessageHandler
 	m.handlers[EventChangeName] = ChangeNameHandler
+	m.handlers[EventMove] = MoveHandler
 }
 
 // routeEvent makes sure the correct event goes into the correct handler
@@ -109,8 +110,8 @@ func (m *Manager) matchClient(c *Client) {
 	// match if possible
 	for client := range m.clients {
 		if client.role == ROLE_UNMATCH && c != client {
-			client.room = m.room
-			c.room = m.room
+			client.room.id = m.room
+			c.room.id = m.room
 			m.room++
 
 			_ = SendConnectRole(client, ROLE_PALYER1)
