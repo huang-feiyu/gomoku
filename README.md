@@ -1,6 +1,16 @@
 # gomoku
 
-Work process:
+**To run this**:
+
+```
+go run *.go
+```
+
+Then open browsers with address `localhost:8080`.
+
+---
+
+**Work process**:
 
 * [x] how to use go websocket -- [mastering websockets](https://programmingpercy.tech/blog/mastering-websockets-with-go/)
 * [x] replace the frontend code that can't be applied to gomoku with or without Vue CLi for gomoku
