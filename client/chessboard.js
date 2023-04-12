@@ -14,6 +14,10 @@ function initChessboard(n) {
                     alert("please wait until matched")
                     return false
                 }
+                if (gameOver) {
+                    alert("please refresh for next game if you want")
+                    return false
+                }
                 if (this.className !== "background") {
                     alert("cannot put on an occupied pile")
                     return false

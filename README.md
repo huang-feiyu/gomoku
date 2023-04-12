@@ -3,8 +3,8 @@
 Work process:
 
 * [x] how to use go websocket -- [mastering websockets](https://programmingpercy.tech/blog/mastering-websockets-with-go/)
-* [ replace the frontend code that can't be applied to gomoku with or without Vue CLi for gomoku
-* [ ] connect the wire between frontend and Go WebSocket
+* [x] replace the frontend code that can't be applied to gomoku with or without Vue CLi for gomoku
+* [x] connect the wire between frontend and Go WebSocket
 * [ ] test & put into production
 
 ---
@@ -18,5 +18,5 @@ In general, gomoku needs:
     * [x] role message -> C
     * [x] name message -> S & C
     * [x] move message -> S & C
-    * [ ] result message -> C
+    * [x] result message -> C
 

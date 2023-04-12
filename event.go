@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 // Event is the Messages sent over the WebSocket
@@ -19,6 +20,7 @@ const (
 	EventConnectRole = "role_message" // when connect
 	EventChangeName  = "name_message"
 	EventMove        = "move_message"
+	EventResult      = "result_message"
 )
 
 type ConnectRoleEvent struct {
@@ -75,7 +77,6 @@ type MoveEvent struct {
 
 // MoveHandler not only receive the move, => receive move from client
 // but also updates the pair's display => send move message to the pair
-// TODO: result
 func MoveHandler(event Event, c *Client) error {
 	// receive move from client
 	var moveEvent MoveEvent
@@ -98,6 +99,27 @@ func MoveHandler(event Event, c *Client) error {
 
 	// send result to the pair
 	if res != 0 {
+		log.Printf("Player%d wins in room[%d] with client[%d](%d) X client[%d](%d)",
+			res, c.room.id, c.id, c.role, opponent.id, opponent.role)
+		_ = SendResult(c, res)
+		_ = SendResult(opponent, res)
 	}
+	return nil
+}
+
+// ResultEvent shows who win
+type ResultEvent struct {
+	Role int `json:"role"`
+}
+
+// SendResult is called when a client wins
+// AND this client match with the waiting client => send result message to client
+func SendResult(client *Client, role int) error {
+	resultEvent := ResultEvent{role}
+	data, _ := json.Marshal(resultEvent)
+	var outgoingEvent Event
+	outgoingEvent.Payload = data
+	outgoingEvent.Type = EventResult
+	client.egress <- outgoingEvent
 	return nil
 }

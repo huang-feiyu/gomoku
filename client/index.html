@@ -51,6 +51,7 @@
     let role = 0; // default
     let matched = false
     let inTurn = false
+    let gameOver = false
 
     let player1
     let player2
@@ -100,6 +101,15 @@
     }
 
     /**
+     * ResultEvent is used for display
+     * */
+    class ResultEvent {
+        constructor(role) {
+            this.role = role
+        }
+    }
+
+    /**
      * routeEvent is a proxy function that routes
      * events into their correct Handler
      * based on the type field
@@ -121,6 +131,10 @@
                 const moveEvent = Object.assign(new MoveEvent, event.payload)
                 changeMove(moveEvent)
                 break
+            case "result_message":
+                const resultEvent = Object.assign(new ResultEvent, event.payload)
+                changeResult(resultEvent)
+                break
             default:
                 alert("unsupported message type")
                 break
@@ -141,7 +155,11 @@
 
         inTurn = roleEvent.role === 1
 
-        document.getElementById("result").innerText = "Player1's Turn"
+        if (inTurn) {
+            document.getElementById("result").innerText = "Your Turn"
+        } else {
+            document.getElementById("result").innerText = "Opponent's Turn"
+        }
     }
 
     /**
@@ -158,20 +176,32 @@
     }
 
     /**
-     * changeMove updates the display of specific pile
+     * changeMove updates the display of specific pile as well as result
      * */
     function changeMove(moveEvent) {
         inTurn = role !== moveEvent.role
-        if (moveEvent.role === 1) {
-            document.getElementById("result").innerText = "Player2's Turn"
+        if (inTurn) {
+            document.getElementById("result").innerText = "Your Turn"
         } else {
-            document.getElementById("result").innerText = "Player1's Turn"
+            document.getElementById("result").innerText = "Opponent's Turn"
         }
         if (moveEvent.role === 1) {
             turnWhite(moveEvent.row, moveEvent.col)
         } else if (moveEvent.role === 2) {
             turnBlack(moveEvent.row, moveEvent.col)
         }
+    }
+
+    /**
+     * changeResult updates the display of result
+     * */
+    function changeResult(resultEvent) {
+        if (resultEvent.role === role) {
+            document.getElementById("result").innerText = "You WIN"
+        } else {
+            document.getElementById("result").innerText = "You LOSE"
+        }
+        gameOver = true
     }
 
     /**
