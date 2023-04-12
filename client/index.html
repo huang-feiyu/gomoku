@@ -2,9 +2,9 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     <title>Ludwig Huang - Gomoku</title>
 </head>
 
@@ -45,7 +45,8 @@
             Player 2:
             <textarea id="player2" placeholder="Feiyu Huang" readonly rows="1" cols="15"></textarea>
         </div>
-        <div style="clear:both"></div><br>
+        <div style="clear:both"></div>
+        <br>
 
         <textarea id="result" class="result" placeholder="Nothing here for now!" readonly rows="1"></textarea>
     </div>
@@ -63,284 +64,298 @@
 
 <!-- Javascript to Connect to Websocket and Handle New messages -->
 <script type="text/javascript">
-        let role = 0; // default
-        let matched = false;
-        let inTurn = false;
+    let role = 0; // default
+    let matched = false;
+    let inTurn = false;
 
-        let player1;
-        let player2;
+    let player1;
+    let player2;
 
-        /**
-         * Event is used to wrap all messages Send and Recieved
-         * on the Websocket
-         * The type is used as a RPC
-         * */
-        class Event {
-            // Each Event needs a Type
-            // The payload is not required
-            constructor(type, payload) {
-                this.type = type;
-                this.payload = payload;
-            }
+    /**
+     * Event is used to wrap all messages Send and Recieved
+     * on the Websocket
+     * The type is used as a RPC
+     * */
+    class Event {
+        // Each Event needs a Type
+        // The payload is not required
+        constructor(type, payload) {
+            this.type = type;
+            this.payload = payload;
         }
-        /**
-         * SendMessageEvent is used to send messages to other clients
-         * */
-        class SendMessageEvent {
-            constructor(message, from) {
-                this.message = message;
-                this.from = from;
-            }
-        }
-        /**
-         * ChangeNameEvent is used to change name
-         * */
-        class ChangeNameEvent {
-            constructor(name, role) {
-                this.name = name
-                this.role = role
-            }
-        }
-        /**
-         * MoveEvent is used for display
-         * */
-        class MoveEvent {
-            constructor(role, row, col) {
-                this.role = role
-                this.row = row
-                this.row = col
-            }
-        }
-        /**
-         * NewMessageEvent is messages coming from clients
-         * */
-        class NewMessageEvent {
-            constructor(message, from, sent) {
-                this.message = message;
-                this.from = from;
-                this.sent = sent;
-            }
-        }
-        /**
-         * ConnectRoleEvent is used to assign role
-         * */
-        class ConnectRoleEvent {
-            constructor(role) {
-                this.role = role;
-            }
-        }
-        /**
-         * routeEvent is a proxy function that routes
-         * events into their correct Handler
-         * based on the type field
-         * */
-        function routeEvent(event) {
-            if (event.type === undefined) {
-                alert("no 'type' field in event");
-            }
-            switch (event.type) {
-                case "new_message":
-                    const messageEvent = Object.assign(new NewMessageEvent, event.payload);
-                    appendChatMessage(messageEvent);
-                    break;
-                case "role_message":
-                    const roleEvent = Object.assign(new ConnectRoleEvent, event.payload);
-                    changeRole(roleEvent)
-                    break
-                case "name_message":
-                    const nameEvent = Object.assign(new ChangeNameEvent, event.payload);
-                    changeName(nameEvent)
-                    break
-                case "move_message":
-                    //TODO:
-                    break
-                default:
-                    alert("unsupported message type");
-                    break;
-            }
-        }
-        /**
-         * changeRole indicates default name as well as something else
-         * */
-        function changeRole(roleEvent) {
-            role = roleEvent.role
-            document.getElementById("role-header").innerHTML = "Player" + role;
-            matched = true;
+    }
 
-            // default name
-            player1 = "Ludwig Huang"
-            player2 = "Feiyu Huang"
+    /**
+     * SendMessageEvent is used to send messages to other clients
+     * */
+    class SendMessageEvent {
+        constructor(message, from) {
+            this.message = message;
+            this.from = from;
+        }
+    }
 
-            inTurn = roleEvent.role === 1
+    /**
+     * ChangeNameEvent is used to change name
+     * */
+    class ChangeNameEvent {
+        constructor(name, role) {
+            this.name = name
+            this.role = role
         }
-        /**
-         * changeName updates the name of a specific role
-         * */
-        function changeName(nameEvent) {
-            if (nameEvent.role === 1) {
-                player1 = nameEvent.name
-            } else if (nameEvent.role === 2) {
-                player2 = nameEvent.name
-            }
-            document.getElementById("player1").innerText = player1
-            document.getElementById("player2").innerText = player2
-        }
-        /**
-         * appendChatMessage takes in new messages and adds them to the chat
-         * */
-        function appendChatMessage(messageEvent) {
-            var date = new Date(messageEvent.sent);
-            // format message
-            const formattedMsg = `${date.toLocaleString()}: ${messageEvent.message}`;
-            // Append Message
-            textarea = document.getElementById("chatmessages");
-            textarea.innerHTML = textarea.innerHTML + "\n" + formattedMsg;
-            textarea.scrollTop = textarea.scrollHeight;
-        }
-        /**
-         * sendMessage will send a new message onto the Websocket
-         * */
-        function sendMessage() {
-            var newmessage = document.getElementById("message");
-            if (newmessage != null) {
-                let outgoingEvent = new SendMessageEvent(newmessage.value, "percy");
-                sendEvent("send_message", outgoingEvent)
-            }
-            return false;
-        }
-        /**
-         * sendName will send name through WebSocket
-         * */
-        function sendName() {
-            let newName = document.getElementById("name");
-            if (!matched) {
-                alert("please wait until matched")
-                return false
-            }
-            if (newName != null) {
-                let outgoingEvent = new ChangeNameEvent(newName.value, role);
-                sendEvent("name_message", outgoingEvent)
-            }
-            return false;
-        }
-        /**
-         * sendName will send move through WebSocket
-         * */
-        function sendMove(row, col) {
-            let outgoingEvent = new MoveEvent(role, row, col);
-            sendEvent("move_message", outgoingEvent)
-            return false;
-        }
-        /**
-         * sendEvent
-         * eventname - the event name to send on
-         * payload - the data payload
-         * */
-        function sendEvent(eventName, payload) {
-            // Create a event Object with a event named send_message
-            const event = new Event(eventName, payload);
-            // Format as JSON and send
-            conn.send(JSON.stringify(event));
-        }
-        /**
-         * Once the website loads, we want to apply listeners and connect to websocket
-         * */
-        window.onload = function () {
-            // Apply our listener functions to the submit event on both forms
-            // we do it this way to avoid redirects
-            document.getElementById("chatroom-message").onsubmit = sendMessage;
-            document.getElementById("name-message").onsubmit = sendName;
+    }
 
-            // Check if the browser supports WebSocket
-            if (window["WebSocket"]) {
-                console.log("supports websockets");
-                // Connect to websocket
-                conn = new WebSocket("ws://" + document.location.host + "/ws");
+    /**
+     * MoveEvent is used for display
+     * */
+    class MoveEvent {
+        constructor(role, row, col) {
+            this.role = role
+            this.row = row
+            this.row = col
+        }
+    }
 
-                // Add a listener to the onmessage event
-                conn.onmessage = function(evt) {
-                    console.log(evt);
-                    // parse websocket message as JSON
-                    const eventData = JSON.parse(evt.data);
-                    // Assign JSON data to new Event Object
-                    const event = Object.assign(new Event, eventData);
-                    // Let router manage message
-                    routeEvent(event);
-                }
+    /**
+     * NewMessageEvent is messages coming from clients
+     * */
+    class NewMessageEvent {
+        constructor(message, from, sent) {
+            this.message = message;
+            this.from = from;
+            this.sent = sent;
+        }
+    }
 
-                initChessboard(10)
-            } else {
-                alert("Not supporting WebSocket")
+    /**
+     * ConnectRoleEvent is used to assign role
+     * */
+    class ConnectRoleEvent {
+        constructor(role) {
+            this.role = role;
+        }
+    }
+
+    /**
+     * routeEvent is a proxy function that routes
+     * events into their correct Handler
+     * based on the type field
+     * */
+    function routeEvent(event) {
+        if (event.type === undefined) {
+            alert("no 'type' field in event");
+        }
+        switch (event.type) {
+            case "new_message":
+                const messageEvent = Object.assign(new NewMessageEvent, event.payload);
+                appendChatMessage(messageEvent);
+                break;
+            case "role_message":
+                const roleEvent = Object.assign(new ConnectRoleEvent, event.payload);
+                changeRole(roleEvent)
+                break
+            case "name_message":
+                const nameEvent = Object.assign(new ChangeNameEvent, event.payload);
+                changeName(nameEvent)
+                break
+            case "move_message":
+                //TODO:
+                break
+            default:
+                alert("unsupported message type");
+                break;
+        }
+    }
+
+    /**
+     * changeRole indicates default name as well as something else
+     * */
+    function changeRole(roleEvent) {
+        role = roleEvent.role
+        document.getElementById("role-header").innerHTML = "Player" + role;
+        matched = true;
+
+        // default name
+        player1 = "Ludwig Huang"
+        player2 = "Feiyu Huang"
+
+        inTurn = roleEvent.role === 1
+    }
+
+    /**
+     * changeName updates the name of a specific role
+     * */
+    function changeName(nameEvent) {
+        if (nameEvent.role === 1) {
+            player1 = nameEvent.name
+        } else if (nameEvent.role === 2) {
+            player2 = nameEvent.name
+        }
+        document.getElementById("player1").innerText = player1
+        document.getElementById("player2").innerText = player2
+    }
+
+    /**
+     * appendChatMessage takes in new messages and adds them to the chat
+     * */
+    function appendChatMessage(messageEvent) {
+        var date = new Date(messageEvent.sent);
+        // format message
+        const formattedMsg = `${date.toLocaleString()}: ${messageEvent.message}`;
+        // Append Message
+        textarea = document.getElementById("chatmessages");
+        textarea.innerHTML = textarea.innerHTML + "\n" + formattedMsg;
+        textarea.scrollTop = textarea.scrollHeight;
+    }
+
+    /**
+     * sendMessage will send a new message onto the Websocket
+     * */
+    function sendMessage() {
+        var newmessage = document.getElementById("message");
+        if (newmessage != null) {
+            let outgoingEvent = new SendMessageEvent(newmessage.value, "percy");
+            sendEvent("send_message", outgoingEvent)
+        }
+        return false;
+    }
+
+    /**
+     * sendName will send name through WebSocket
+     * */
+    function sendName() {
+        let newName = document.getElementById("name");
+        if (!matched) {
+            alert("please wait until matched")
+            return false
+        }
+        if (newName != null) {
+            let outgoingEvent = new ChangeNameEvent(newName.value, role);
+            sendEvent("name_message", outgoingEvent)
+        }
+        return false;
+    }
+
+    /**
+     * sendName will send move through WebSocket
+     * */
+    function sendMove(row, col) {
+        let outgoingEvent = new MoveEvent(role, row, col);
+        sendEvent("move_message", outgoingEvent)
+        return false;
+    }
+
+    /**
+     * sendEvent
+     * eventname - the event name to send on
+     * payload - the data payload
+     * */
+    function sendEvent(eventName, payload) {
+        // Create a event Object with a event named send_message
+        const event = new Event(eventName, payload);
+        // Format as JSON and send
+        conn.send(JSON.stringify(event));
+    }
+
+    /**
+     * Once the website loads, we want to apply listeners and connect to websocket
+     * */
+    window.onload = function () {
+        // Apply our listener functions to the submit event on both forms
+        // we do it this way to avoid redirects
+        document.getElementById("chatroom-message").onsubmit = sendMessage;
+        document.getElementById("name-message").onsubmit = sendName;
+
+        // Check if the browser supports WebSocket
+        if (window["WebSocket"]) {
+            console.log("supports websockets");
+            // Connect to websocket
+            conn = new WebSocket("ws://" + document.location.host + "/ws");
+
+            // Add a listener to the onmessage event
+            conn.onmessage = function (evt) {
+                console.log(evt);
+                // parse websocket message as JSON
+                const eventData = JSON.parse(evt.data);
+                // Assign JSON data to new Event Object
+                const event = Object.assign(new Event, eventData);
+                // Let router manage message
+                routeEvent(event);
             }
-        };
 
-    </script>
+            initChessboard(10)
+        } else {
+            alert("Not supporting WebSocket")
+        }
+    };
+
+</script>
 
 <style type="text/css">
-        body {
-            font-size: 20px;
-            overflow: hidden;
-            padding: 0;
-            margin: 0;
-            width: 100%;
-            height: 100%;
-            /* background: rgb(66, 56, 56); */
-        }
+    body {
+        font-size: 20px;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        /* background: rgb(66, 56, 56); */
+    }
 
-        .center {
-            margin: auto;
-            width: 50%;
-            border: 3px solid green;
-            padding: 10px;
-        }
+    .center {
+        margin: auto;
+        width: 50%;
+        border: 3px solid green;
+        padding: 10px;
+    }
 
-        .gomoku {
-            margin: auto;
-            width: 50%;
-            border: 3px solid green;
-            padding: 10px;
-        }
+    .gomoku {
+        margin: auto;
+        width: 50%;
+        border: 3px solid green;
+        padding: 10px;
+    }
 
-        textarea {
-            font-size: 22px;
-        }
+    textarea {
+        font-size: 22px;
+    }
 
-        .name1 {
-            width: 40%;
-            float: left;
-        }
+    .name1 {
+        width: 40%;
+        float: left;
+    }
 
-        .name2 {
-            width: 50%;
-            float: right;
-        }
+    .name2 {
+        width: 50%;
+        float: right;
+    }
 
-        .result {
-            width: 100%;
-            margin: 2px;
-            border: 1px solid;
-        }
+    .result {
+        width: 100%;
+        margin: 2px;
+        border: 1px solid;
+    }
 
-        .background {
-            height: 40px;
-            width : 40px;
-            cursor: pointer;
-            background-image: url(/background.gif);
-        }
+    .background {
+        height: 40px;
+        width: 40px;
+        cursor: pointer;
+        background-image: url(/background.gif);
+    }
 
-        .whiteStone {
-            height: 40px;
-            width : 40px;
-            cursor: pointer;
-            background-image: url(/whiteStone.gif);
-        }
+    .whiteStone {
+        height: 40px;
+        width: 40px;
+        cursor: pointer;
+        background-image: url(/whiteStone.gif);
+    }
 
-        .blackStone {
-            height: 40px;
-            width : 40px;
-            cursor: pointer;
-            background-image: url(/blackStone.gif);
-        }
+    .blackStone {
+        height: 40px;
+        width: 40px;
+        cursor: pointer;
+        background-image: url(/blackStone.gif);
+    }
 </style>
 
 </body>
