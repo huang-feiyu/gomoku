@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	pongWait     = 10 * time.Second    // pongWait is how long we will await a pong response from client
+	pongWait     = 30 * time.Second    // pongWait is how long we will await a pong response from client
 	pingInterval = (pongWait * 9) / 10 // pingInterval has to be less than pongWait, otherwise server will close before next ping
 
 	ROLE_UNMATCH = 0

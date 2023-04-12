@@ -10,7 +10,6 @@ function initChessboard(n) {
             turnIdle(cell);
 
             cell.addEventListener("click", function () {
-                // alert("cell ["+ getX(this) + "," + getY(this) + "] clicked");
                 if (!matched) {
                     alert("please wait until matched")
                     return false

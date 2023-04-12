@@ -38,7 +38,6 @@ func NewManager() *Manager {
 
 // setupEventHandlers configures and adds all handlers
 func (m *Manager) setupEventHandlers() {
-	m.handlers[EventSendMessage] = SendMessageHandler
 	m.handlers[EventChangeName] = ChangeNameHandler
 	m.handlers[EventMove] = MoveHandler
 }
