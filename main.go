@@ -20,16 +20,7 @@ var (
 
 // checkOrigin will check origin and return true if its allowed
 func checkOrigin(r *http.Request) bool {
-
-	// grab the request origin
-	origin := r.Header.Get("Origin")
-
-	switch origin {
-	case "http://" + addr + port:
-		return true
-	default:
-		return false
-	}
+	return true
 }
 
 // setupAPI will start all Routes and their Handlers
