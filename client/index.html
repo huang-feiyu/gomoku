@@ -72,7 +72,7 @@
     let player2;
 
     /**
-     * Event is used to wrap all messages Send and Recieved
+     * Event is used to wrap all messages Send and Received
      * on the Websocket
      * The type is used as a RPC
      * */
@@ -112,7 +112,7 @@
         constructor(role, row, col) {
             this.role = role
             this.row = row
-            this.row = col
+            this.col = col
         }
     }
 
@@ -159,7 +159,8 @@
                 changeName(nameEvent)
                 break
             case "move_message":
-                //TODO:
+                const moveEvent = Object.assign(new MoveEvent, event.payload);
+                changeMove(moveEvent)
                 break
             default:
                 alert("unsupported message type");
@@ -180,6 +181,8 @@
         player2 = "Feiyu Huang"
 
         inTurn = roleEvent.role === 1
+
+        document.getElementById("result").innerText = "Player1's Turn"
     }
 
     /**
@@ -193,6 +196,23 @@
         }
         document.getElementById("player1").innerText = player1
         document.getElementById("player2").innerText = player2
+    }
+
+    /**
+     * changeMove updates the display of specific pile
+     * */
+    function changeMove(moveEvent) {
+        inTurn = role !== moveEvent.role
+        if (moveEvent.role === 1) {
+            document.getElementById("result").innerText = "Player2's Turn"
+        } else {
+            document.getElementById("result").innerText = "Player1's Turn"
+        }
+        if (moveEvent.role === 1) {
+            turnWhite(moveEvent.row, moveEvent.col)
+        } else if (moveEvent.role === 2) {
+            turnBlack(moveEvent.row, moveEvent.col)
+        }
     }
 
     /**

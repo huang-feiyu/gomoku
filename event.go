@@ -132,7 +132,17 @@ func MoveHandler(event Event, c *Client) error {
 	}
 	res := c.room.Move(moveEvent.Role, moveEvent.Row, moveEvent.Col)
 
-	// TODO: send display to both of the pair
+	// send display to both of the pair
+	data, _ := json.Marshal(moveEvent)
+	var outgoingEvent Event
+	outgoingEvent.Payload = data
+	outgoingEvent.Type = EventMove
+	opponent := c.GetPartner()
+	if opponent == nil {
+		return fmt.Errorf("move is not allowed if no partner")
+	}
+	opponent.egress <- outgoingEvent
+	c.egress <- outgoingEvent
 
 	// send result to the pair
 	if res != 0 {

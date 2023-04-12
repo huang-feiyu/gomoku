@@ -15,19 +15,13 @@ function initChessboard(n) {
                     alert("please wait until matched")
                     return false
                 }
-                if (!inTurn) {
-                    alert("please wait until your turn")
-                    return false
-                }
                 if (this.className !== "background") {
                     alert("cannot put on an occupied pile")
                     return false
                 }
-                // FIXME: wrong
-                if (role === 1) {
-                    turnWhite(this)
-                } else {
-                    turnBlack(this)
+                if (!inTurn) {
+                    alert("please wait until your turn")
+                    return false
                 }
                 sendMove(getX(cell), getY(cell))
                 return false
@@ -36,13 +30,14 @@ function initChessboard(n) {
     }
 }
 
-// FIXME: x, y
-function turnWhite(cell) {
-    cell.className = "whiteStone";
+function turnWhite(row, col) {
+    let table = document.getElementById('board');
+    table.rows[row].cells[col].className = "whiteStone"
 }
 
-function turnBlack(cell) {
-    cell.className = "blackStone";
+function turnBlack(row, col) {
+    let table = document.getElementById('board');
+    table.rows[row].cells[col].className = "blackStone"
 }
 
 function turnIdle(cell) {

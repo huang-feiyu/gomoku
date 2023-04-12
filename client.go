@@ -46,7 +46,7 @@ func NewClient(conn *websocket.Conn, manager *Manager) *Client {
 // GetPartner returns the opponent of this client
 func (c *Client) GetPartner() *Client {
 	for client := range c.manager.clients {
-		if client.room == c.room && (client.role == ROLE_PALYER1 && c.role == ROLE_PALYER2 ||
+		if client.room.id == c.room.id && (client.role == ROLE_PALYER1 && c.role == ROLE_PALYER2 ||
 			client.role == ROLE_PALYER2 && c.role == ROLE_PALYER1) {
 			return client
 		}
